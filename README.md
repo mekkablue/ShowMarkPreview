@@ -15,7 +15,7 @@ Please install the plugin via the built-in Plugin Manager, available via *Window
 1. Activate *View > Show Mark Preview.*
 2. Open an Edit tab with any number of letters and marks containing appropriate mark attachment anchors (e.g., `top` and `_top`, respectively).
 
-The marks will be stacked onto all letters in the Edit tab.
+The marks will be stacked onto all letters in the Edit tab, provided they have respective anchors.
 
 ### Known Problems
 
