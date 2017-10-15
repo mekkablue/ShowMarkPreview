@@ -93,19 +93,20 @@ class ShowMarkPreview(ReporterPlugin):
 									displayMark.transformUsingAffineTransform_(displayShift)
 									displayMark.fill()
 									
-									# shift and store next anchor position
-									nextAnchorX = stackingAnchor.x + shiftX
-									nextAnchorY = stackingAnchor.y + shiftY
-									anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
+									# shift and store next anchor position (if exists)
+									if stackingAnchor:
+										nextAnchorX = stackingAnchor.x + shiftX
+										nextAnchorY = stackingAnchor.y + shiftY
+										anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
 	
 	def foreground(self, layer):
-		color = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.1, 0.6, 0.4)
+		color = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
 		color.set()
 		self.drawMarksOnLayer(layer)
 
 	def inactiveLayers(self, layer):
 		self.shouldDrawAccentCloudForLayer_(layer)
-		color = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.0, 0.1, 0.5)
+		color = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
 		color.set()
 		self.drawMarksOnLayer(layer)
 	
