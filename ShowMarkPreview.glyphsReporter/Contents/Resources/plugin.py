@@ -89,7 +89,7 @@ class ShowMarkPreview(ReporterPlugin):
 									shiftX = letterAnchor.x - attachingAnchor.x
 									shiftY = letterAnchor.y - attachingAnchor.y
 									displayShift = self.transform(shiftX=shiftX, shiftY=shiftY)
-									displayMark = thisMark.bezierPath.copy()
+									displayMark = thisMark.completeBezierPath.copy()
 									displayMark.transformUsingAffineTransform_(displayShift)
 									displayMark.fill()
 									
