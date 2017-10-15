@@ -4,6 +4,8 @@
 
 ![ShowMarkPreview](ShowMarkPreview.png)
 
+*Sample font shown: Lao Pali by Ben Mitchell (@ohbendy).*
+
 ### Installation
 
 Please install the plugin via the built-in Plugin Manager, available via *Window > Plugin Manager,* and restart the application.
@@ -18,7 +20,7 @@ The marks will be stacked onto all letters in the Edit tab.
 ### Known Problems
 
 * Unfortunately, I cannot disable the default mark cloud under all circumstances (yet).
-* Typing new sidebearings in the grey glyph info box (View > Show Glyph Info) does not work when *View > Show Mark Preview* is on, at least in 2.5b (1072).
+* Typing new sidebearings in the grey glyph info box (*View > Show Glyph Info*) does not work when *View > Show Mark Preview* is on, at least in 2.5b (1072).
 
 ### License
 
