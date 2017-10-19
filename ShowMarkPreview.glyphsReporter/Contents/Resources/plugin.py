@@ -71,7 +71,7 @@ class ShowMarkPreview(ReporterPlugin):
 				if tab:
 					marks = []
 					for thisLayer in tab.layers:
-						if thisLayer.glyph().category == "Mark":
+						if thisLayer.glyph() and thisLayer.glyph().category == "Mark":
 							marks.append( thisLayer )
 							
 					# continue if there are any marks in the Edit tab:
