@@ -59,7 +59,7 @@ class ShowMarkPreview(ReporterPlugin):
 		# draw only in letters:
 		if layer.glyph().category == "Letter":
 			anchorDict = {}
-			for thisAnchor in layer.anchors:
+			for thisAnchor in layer.anchorsTraversingComponents():
 				anchorDict[thisAnchor.name] = thisAnchor.position
 			
 			# continue if there are any anchors in the layer:
@@ -77,11 +77,11 @@ class ShowMarkPreview(ReporterPlugin):
 					# continue if there are any marks in the Edit tab:
 					if marks:
 						for thisMark in marks:
-							attachingAnchors = [a for a in thisMark.anchors if a.name.startswith("_")]
-							if attachingAnchors:
-								attachingAnchor = attachingAnchors[0]
+							attachingAnchorNames = [a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")]
+							if attachingAnchorNames:
+								attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorNames[0],True)
 								stackingAnchorName = attachingAnchor.name[1:]
-								stackingAnchor = thisMark.anchors[stackingAnchorName]
+								stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
 								letterAnchor = anchorDict[stackingAnchorName]
 
 								if letterAnchor:
