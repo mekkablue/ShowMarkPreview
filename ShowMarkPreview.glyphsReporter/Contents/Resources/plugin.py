@@ -57,7 +57,7 @@ class ShowMarkPreview(ReporterPlugin):
 	
 	def drawMarksOnLayer(self, layer):
 		# draw only in letters:
-		if layer.glyph().category == "Letter":
+		if layer.glyph().category in ("Letter","Number","Punctuation"):
 			anchorDict = {}
 			for thisAnchor in layer.anchorsTraversingComponents():
 				anchorDict[thisAnchor.name] = thisAnchor.position
