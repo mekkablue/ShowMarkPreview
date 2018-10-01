@@ -17,15 +17,15 @@
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleVersion</key>
-	<string>7</string>
+	<string>8</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.6</string>
+	<string>1.0.7</string>
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/mekkablue/ShowMarkPreview/master/ShowMarkPreview.glyphsReporter/Contents/Info.plist</string>
 	<key>productPageURL</key>
 	<string>https://github.com/mekkablue/ShowMarkPreview</string>
 	<key>productReleaseNotes</key>
-	<string>Base glyph can now also be Number or Punctuation.</string>
+	<string>Fixed placement of 2nd mark if that mark introduced a new anchor, e.g. uMark in /ka-khmer/ka-khmer.below/uMark-khmer (thx Sovichet).</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright, Rainer Erich Scheichelbauer, 2017</string>
 	<key>NSPrincipalClass</key>

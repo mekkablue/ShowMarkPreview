@@ -78,11 +78,12 @@ class ShowMarkPreview(ReporterPlugin):
 					if marks:
 						for thisMark in marks:
 							attachingAnchorNames = [a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")]
+							stackingAnchorNames = [a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")]
 							if attachingAnchorNames:
 								attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorNames[0],True)
-								stackingAnchorName = attachingAnchor.name[1:]
-								stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
-								letterAnchor = anchorDict[stackingAnchorName]
+								relatedStackingAnchorName = attachingAnchor.name[1:]
+								relatedStackingAnchor = thisMark.anchorForName_traverseComponents_(relatedStackingAnchorName,True)
+								letterAnchor = anchorDict[relatedStackingAnchorName]
 
 								if letterAnchor:
 									# shift and draw bezier path:
@@ -94,7 +95,8 @@ class ShowMarkPreview(ReporterPlugin):
 									displayMark.fill()
 									
 									# shift and store next anchor position (if exists)
-									if stackingAnchor:
+									for stackingAnchorName in stackingAnchorNames:
+										stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
 										nextAnchorX = stackingAnchor.x + shiftX
 										nextAnchorY = stackingAnchor.y + shiftY
 										anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
