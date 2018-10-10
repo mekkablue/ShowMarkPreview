@@ -12,10 +12,12 @@
 ###########################################################################################################
 
 
+from GlyphsApp import GSControlLayer, subtractPoints
 from GlyphsApp.plugins import *
 import math
 	
 class ShowMarkPreview(ReporterPlugin):
+	categoriesOnWhichToDrawAccents = ("Letter","Number","Punctuation")
 	
 	def transform(self, shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 		"""
@@ -55,22 +57,20 @@ class ShowMarkPreview(ReporterPlugin):
 			'de': u'Akzent-Vorschau'
 		})
 	
-	def drawMarksOnLayer(self, layer):
+	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
 		# draw only in letters:
-		if layer.glyph().category in ("Letter","Number","Punctuation"):
+		if layer.glyph().category in self.categoriesOnWhichToDrawAccents:
 			anchorDict = {}
 			for thisAnchor in layer.anchorsTraversingComponents():
 				anchorDict[thisAnchor.name] = thisAnchor.position
 			
 			# continue if there are any anchors in the layer:
 			if anchorDict:
-				font = layer.font()
-				tab = font.currentTab
 				
 				# continue if there is an Edit tab open:
-				if tab:
+				if lineOfLayers:
 					marks = []
-					for thisLayer in tab.composedLayers:
+					for thisLayer in lineOfLayers:
 						if thisLayer.glyph() and thisLayer.glyph().category == "Mark":
 							marks.append( thisLayer )
 							
@@ -82,13 +82,13 @@ class ShowMarkPreview(ReporterPlugin):
 							if attachingAnchorNames:
 								attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorNames[0],True)
 								relatedStackingAnchorName = attachingAnchor.name[1:]
-								relatedStackingAnchor = thisMark.anchorForName_traverseComponents_(relatedStackingAnchorName,True)
 								letterAnchor = anchorDict[relatedStackingAnchorName]
 
 								if letterAnchor:
 									# shift and draw bezier path:
-									shiftX = letterAnchor.x - attachingAnchor.x
-									shiftY = letterAnchor.y - attachingAnchor.y
+									scale = self.getScale()
+									shiftX = letterAnchor.x - attachingAnchor.x + offset.x / scale
+									shiftY = letterAnchor.y - attachingAnchor.y + offset.y / scale
 									displayShift = self.transform(shiftX=shiftX, shiftY=shiftY)
 									displayMark = thisMark.completeBezierPath.copy()
 									displayMark.transformUsingAffineTransform_(displayShift)
@@ -97,20 +97,55 @@ class ShowMarkPreview(ReporterPlugin):
 									# shift and store next anchor position (if exists)
 									for stackingAnchorName in stackingAnchorNames:
 										stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
-										nextAnchorX = stackingAnchor.x + shiftX
-										nextAnchorY = stackingAnchor.y + shiftY
+										nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
+										nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
 										anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
 	
 	def foreground(self, layer):
-		color = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
-		color.set()
-		self.drawMarksOnLayer(layer)
+		# define drawing colors
+		activeColor = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
+		inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
+		
+		# go through tab content
+		glyph = layer.glyph()
+		font = layer.font()
+		if font: # sometimes font is empty, don't know why
+			tabView = font.currentTab.graphicView()
+			layerCount = tabView.cachedLayerCount()
+			lineOfLayers = []
+			lineOfOffsets = []
 
-	def inactiveLayers(self, layer):
-		self.shouldDrawAccentCloudForLayer_(layer)
-		color = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
-		color.set()
-		self.drawMarksOnLayer(layer)
+			# collect layers in the same line (to only draw the marks we need)
+			for i in range(layerCount):
+				thisLayer = tabView.cachedGlyphAtIndex_(i)
+			
+				# collect layers and their offsets except newlines
+				if type(thisLayer) != GSControlLayer:
+					lineOfLayers.append( thisLayer )
+					lineOfOffsets.append( tabView.cachedPositionAtIndex_(i) )
+			
+				# if we reach end of line or end of text, draw with collected layers:
+				if type(thisLayer) == GSControlLayer or i==layerCount-1:
+				
+					# step through all layers of the line:
+					for j, thisLayerInLine in enumerate(lineOfLayers):
+					
+						# draw accents on them if they are Letter/Number/Punctuation
+						if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents:
+							activePosition = tabView.activePosition()
+							lastLayerInLinePosition = tabView.cachedPositionAtIndex_(i)
+							thisLayerInLinePosition = lineOfOffsets[j]
+							offset = subtractPoints(thisLayerInLinePosition, activePosition)
+							if offset == NSPoint(0,0):
+								activeColor.set()
+								self.drawMarksOnLayer(thisLayerInLine, lineOfLayers)
+							else:
+								inactiveColor.set()
+								self.drawMarksOnLayer(thisLayerInLine, lineOfLayers, offset)
+				
+					# reset layer collection
+					lineOfLayers = []
+					lineOfOffsets = []
 	
 	def needsExtraMainOutlineDrawingForInactiveLayer_(self, layer):
 		return True
