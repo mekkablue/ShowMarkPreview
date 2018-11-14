@@ -54,7 +54,8 @@ class ShowMarkPreview(ReporterPlugin):
 	def settings(self):
 		self.menuName = Glyphs.localize({
 			'en': u'Mark Preview',
-			'de': u'Akzent-Vorschau'
+			'de': u'Akzent-Vorschau',
+			'es': u'previsualización de acentos',
 		})
 	
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
