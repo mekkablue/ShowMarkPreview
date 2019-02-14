@@ -83,7 +83,10 @@ class ShowMarkPreview(ReporterPlugin):
 							if attachingAnchorNames:
 								attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorNames[0],True)
 								relatedStackingAnchorName = attachingAnchor.name[1:]
-								letterAnchor = anchorDict[relatedStackingAnchorName]
+								try:
+									letterAnchor = anchorDict[relatedStackingAnchorName]
+								except KeyError:
+									letterAnchor = None
 
 								if letterAnchor:
 									# shift and draw bezier path:
