@@ -97,10 +97,11 @@ class ShowMarkPreview(ReporterPlugin):
 									
 									# shift and store next anchor position (if exists)
 									for stackingAnchorName in stackingAnchorNames:
-										stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
-										nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
-										nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
-										anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
+										if stackingAnchor:
+											stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
+											nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
+											nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
+											anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
 	
 	def foreground(self, layer):
 		# define drawing colors
