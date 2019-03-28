@@ -15,10 +15,10 @@
 from GlyphsApp import GSControlLayer, subtractPoints
 from GlyphsApp.plugins import *
 import math
-	
+
 class ShowMarkPreview(ReporterPlugin):
 	categoriesOnWhichToDrawAccents = ("Letter","Number","Punctuation")
-	
+
 	def transform(self, shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 		"""
 		Returns an NSAffineTransform object for transforming layers.
@@ -49,32 +49,32 @@ class ShowMarkPreview(ReporterPlugin):
 			skewTransform.setTransformStruct_(skewStruct)
 			myTransform.appendTransform_(skewTransform)
 		return myTransform
-	
-	
+
+
 	def settings(self):
 		self.menuName = Glyphs.localize({
 			'en': u'Mark Preview',
 			'de': u'Akzent-Vorschau',
 			'es': u'previsualización de acentos',
 		})
-	
+
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
 		# draw only in letters:
 		if layer.glyph().category in self.categoriesOnWhichToDrawAccents:
 			anchorDict = {}
 			for thisAnchor in layer.anchorsTraversingComponents():
 				anchorDict[thisAnchor.name] = thisAnchor.position
-			
+
 			# continue if there are any anchors in the layer:
 			if anchorDict:
-				
+
 				# continue if there is an Edit tab open:
 				if lineOfLayers:
 					marks = []
 					for thisLayer in lineOfLayers:
 						if thisLayer.glyph() and thisLayer.glyph().category == "Mark":
 							marks.append( thisLayer )
-							
+
 					# continue if there are any marks in the Edit tab:
 					if marks:
 						for thisMark in marks:
@@ -97,7 +97,7 @@ class ShowMarkPreview(ReporterPlugin):
 									displayMark = thisMark.completeBezierPath.copy()
 									displayMark.transformUsingAffineTransform_(displayShift)
 									displayMark.fill()
-									
+
 									# shift and store next anchor position (if exists)
 									for stackingAnchorName in stackingAnchorNames:
 										stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
@@ -105,12 +105,20 @@ class ShowMarkPreview(ReporterPlugin):
 											nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
 											nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
 											anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
-	
+
 	def foreground(self, layer):
+
 		# define drawing colors
 		activeColor = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
 		inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
-		
+
+		currentController = self.controller.view().window().windowController()
+		if currentController:
+			if currentController.SpaceKey():
+				activeColor = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
+				inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
+
+
 		# go through tab content
 		glyph = layer.glyph()
 		font = layer.font()
@@ -123,18 +131,18 @@ class ShowMarkPreview(ReporterPlugin):
 			# collect layers in the same line (to only draw the marks we need)
 			for i in range(layerCount):
 				thisLayer = tabView.cachedGlyphAtIndex_(i)
-			
+
 				# collect layers and their offsets except newlines
 				if type(thisLayer) != GSControlLayer:
 					lineOfLayers.append( thisLayer )
 					lineOfOffsets.append( tabView.cachedPositionAtIndex_(i) )
-			
+
 				# if we reach end of line or end of text, draw with collected layers:
 				if type(thisLayer) == GSControlLayer or i==layerCount-1:
-				
+
 					# step through all layers of the line:
 					for j, thisLayerInLine in enumerate(lineOfLayers):
-					
+
 						# draw accents on them if they are Letter/Number/Punctuation
 						if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents:
 							activePosition = tabView.activePosition()
@@ -147,14 +155,13 @@ class ShowMarkPreview(ReporterPlugin):
 							else:
 								inactiveColor.set()
 								self.drawMarksOnLayer(thisLayerInLine, lineOfLayers, offset)
-				
+
 					# reset layer collection
 					lineOfLayers = []
 					lineOfOffsets = []
-	
+
 	def needsExtraMainOutlineDrawingForInactiveLayer_(self, layer):
 		return True
-			
+
 	def shouldDrawAccentCloudForLayer_(self, layer):
 		return False
-	
