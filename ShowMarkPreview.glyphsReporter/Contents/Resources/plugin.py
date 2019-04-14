@@ -111,14 +111,19 @@ class ShowMarkPreview(ReporterPlugin):
 	def foreground(self, layer):
 
 		# define drawing colors
-		activeColor = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
-		inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
+		if not Glyphs.defaults["GSEditViewDarkMode"]:
+			activeColor = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
+			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
+		else:
+			activeColor = NSColor.colorWithRed_green_blue_alpha_(0.8, 0.0, 1.0, 0.5)
+			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.45, 0.15, 0.6, 0.6)
+			
 
 		currentController = self.controller.view().window().windowController()
 		if currentController:
 			if currentController.SpaceKey():
-				activeColor = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
-				inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
+				activeColor = NSColor.textColor() # colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
+				inactiveColor = NSColor.textColor() # colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
 
 
 		# go through tab content
