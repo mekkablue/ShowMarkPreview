@@ -18,6 +18,7 @@ import math
 
 class ShowMarkPreview(ReporterPlugin):
 	categoriesOnWhichToDrawAccents = ("Letter","Number","Punctuation")
+	specialGlyphsOnWhichToDrawAccents = ("dottedCircle")
 
 	def transform(self, shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 		"""
@@ -60,7 +61,8 @@ class ShowMarkPreview(ReporterPlugin):
 
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
 		# draw only in letters:
-		if layer.glyph().category in self.categoriesOnWhichToDrawAccents:
+		glyph = layer.glyph()
+		if glyph.category in self.categoriesOnWhichToDrawAccents or glyph.name in self.specialGlyphsOnWhichToDrawAccents:
 			anchorDict = {}
 			for thisAnchor in layer.anchorsTraversingComponents():
 				anchorDict[thisAnchor.name] = thisAnchor.position
@@ -144,7 +146,7 @@ class ShowMarkPreview(ReporterPlugin):
 					for j, thisLayerInLine in enumerate(lineOfLayers):
 
 						# draw accents on them if they are Letter/Number/Punctuation
-						if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents:
+						if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents or thisLayerInLine.parent.name in self.specialGlyphsOnWhichToDrawAccents:
 							activePosition = tabView.activePosition()
 							lastLayerInLinePosition = tabView.cachedPositionAtIndex_(i)
 							thisLayerInLinePosition = lineOfOffsets[j]
