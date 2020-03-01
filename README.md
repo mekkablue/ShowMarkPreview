@@ -21,8 +21,8 @@ The marks will be stacked onto all letters in the Edit tab, provided they have r
 
 You can set font-specific custom colors with parameters in *File > Font Info > Custom Parameters.* Add these parameters *properties:*
 
-* `MarkPreviewColor`: color for the marks in the currently active glyph in Edit view, defaults: `0.8, 0.0, 1.0, 0.5`
-* `MarkPreviewColorInactive`: color for the marks in all other (inactive) glyphs in Edit view, defaults: `0.45, 0.15, 0.6, 0.6`
+* `MarkPreviewColor`: color for the marks in the currently active glyph in Edit view, defaults: `0.3, 0.0, 0.6, 0.4` (Light Mode), `0.8, 0.0, 1.0, 0.5` (Dark Mode).
+* `MarkPreviewColorInactive`: color for the marks in all other (inactive) glyphs in Edit view, defaults: `0.15, 0.05, 0.3, 0.5` (Light Mode), `0.45, 0.15, 0.6, 0.6` (Dark Mode).
 
 As values, take comma-separated values between 0.0 and 1.0 for R, G, B, and A. If you only want to override one of these values, simply add invalid values (e.g., `x`) for the ones you want to keep, or leave out trailing values you do not want to change. E.g., `x, 0.3`  will only change the G value to 30%, and leave R, B and A at their defaults.
 
