@@ -2,9 +2,9 @@
 
 *View > Show Mark Preview* is a [Glyphs.app](https://glyphsapp.com/) plug-in for previewing mark-to-base and mark-to-mark attachment directly in Edit view.
 
-![ShowMarkPreview](ShowMarkPreview.png)
+![Show Mark Preview in action, showing Ben Mitchell’s font ‘Monkey’ with Thai and Burmese glyphs, with custom colors set in Font Info.](ShowMarkPreview.png)
 
-*Sample font shown: Lao Pali by Ben Mitchell (@ohbendy).*
+*Sample font shown: ‘Monkey’ by Ben Mitchell (@ohbendy), showing Thai and Burmese glyphs, with custom colors set in Font Info.*
 
 ### Installation
 
