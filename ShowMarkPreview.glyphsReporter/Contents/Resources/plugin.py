@@ -51,7 +51,6 @@ class ShowMarkPreview(ReporterPlugin):
 			myTransform.appendTransform_(skewTransform)
 		return myTransform
 
-
 	def settings(self):
 		self.menuName = Glyphs.localize({
 			'en': u'Mark Preview',
@@ -111,16 +110,43 @@ class ShowMarkPreview(ReporterPlugin):
 											nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
 											anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
 
+	def defineColors(self, RGBA, parameterValue):
+		if parameterValue:
+			# read out custom parameter:
+			parameterValues = [item.strip() for item in parameterValue.strip().split(",")]
+		
+			# add the values to the RGBA list of colors:
+			numValues = min(4,len(parameterValues))
+			for i in range(numValues):
+				try:
+					value = float(parameterValues[i])
+					RGBA[i] = min(value,1.0)
+				except:
+					# fail gracefully and continue if invalid
+					pass
+		return RGBA
+	
 	def foreground(self, layer):
-
+		# go through tab content
+		glyph = layer.glyph()
+		font = layer.font()
+		
 		# define drawing colors
+		RGBA = self.defineColors(
+			[0.8, 0.0, 1.0, 0.5],                      # default active color
+			font.customParameters["MarkPreviewColor"], # user-defined color
+			)
+		RGBAinactive = self.defineColors(
+			[0.45, 0.15, 0.6, 0.6],                            # default inactive color
+			font.customParameters["MarkPreviewColorInactive"], # user-defined color
+			)
+				
 		if not Glyphs.defaults["GSEditViewDarkMode"]:
 			activeColor = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
 			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
 		else:
-			activeColor = NSColor.colorWithRed_green_blue_alpha_(0.8, 0.0, 1.0, 0.5)
-			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.45, 0.15, 0.6, 0.6)
-			
+			activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # splits into separate items of list
+			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
 
 		currentController = self.controller.view().window().windowController()
 		if currentController:
@@ -129,9 +155,6 @@ class ShowMarkPreview(ReporterPlugin):
 				inactiveColor = NSColor.textColor() # colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
 
 
-		# go through tab content
-		glyph = layer.glyph()
-		font = layer.font()
 		if font: # sometimes font is empty, don't know why
 			tabView = font.currentTab.graphicView()
 			layerCount = tabView.cachedLayerCount()
