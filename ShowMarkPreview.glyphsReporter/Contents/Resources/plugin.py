@@ -131,22 +131,28 @@ class ShowMarkPreview(ReporterPlugin):
 		glyph = layer.glyph()
 		font = layer.font()
 		
-		# define drawing colors
+		darkModeIsTurnedOn = NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == "Dark"	
+		if darkModeIsTurnedOn and Glyphs.defaults["GSEditViewDarkMode"]:
+			# default dark mode colors:
+			colorDefaultsActive = [0.8, 0.0, 1.0, 0.5]
+			colorDefaultsInactive = [0.45, 0.15, 0.6, 0.6]
+		else:
+			# default light mode colors:
+			colorDefaultsActive = [0.3, 0.0, 0.6, 0.4]
+			colorDefaultsInactive = [0.15, 0.05, 0.3, 0.5]
+
+		# define drawing colors (user set or defaults)
 		RGBA = self.defineColors(
-			[0.8, 0.0, 1.0, 0.5],                      # default active color
+			colorDefaultsActive,                       # default active color
 			font.customParameters["MarkPreviewColor"], # user-defined color
 			)
 		RGBAinactive = self.defineColors(
-			[0.45, 0.15, 0.6, 0.6],                            # default inactive color
+			colorDefaultsInactive,                             # default inactive color
 			font.customParameters["MarkPreviewColorInactive"], # user-defined color
 			)
-				
-		if not Glyphs.defaults["GSEditViewDarkMode"]:
-			activeColor = NSColor.colorWithRed_green_blue_alpha_(0.3, 0.0, 0.6, 0.4)
-			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(0.15, 0.05, 0.3, 0.5)
-		else:
-			activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # splits into separate items of list
-			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
+		
+		activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # * splits into separate items of list
+		inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
 
 		currentController = self.controller.view().window().windowController()
 		if currentController:
