@@ -1,4 +1,5 @@
 # encoding: utf-8
+from __future__ import division, print_function, unicode_literals
 
 ###########################################################################################################
 #
@@ -11,15 +12,16 @@
 #
 ###########################################################################################################
 
-
-from GlyphsApp import GSControlLayer, subtractPoints
+import objc
+from GlyphsApp import *
 from GlyphsApp.plugins import *
-import math
+from math import radians, tan
 
 class ShowMarkPreview(ReporterPlugin):
 	categoriesOnWhichToDrawAccents = ("Letter","Number","Punctuation")
 	specialGlyphsOnWhichToDrawAccents = ("dottedCircle")
-
+	
+	@objc.python_method
 	def transform(self, shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 		"""
 		Returns an NSAffineTransform object for transforming layers.
@@ -45,12 +47,13 @@ class ShowMarkPreview(ReporterPlugin):
 			skewStruct = NSAffineTransformStruct()
 			skewStruct.m11 = 1.0
 			skewStruct.m22 = 1.0
-			skewStruct.m21 = math.tan(math.radians(skew))
+			skewStruct.m21 = tan(radians(skew))
 			skewTransform = NSAffineTransform.transform()
 			skewTransform.setTransformStruct_(skewStruct)
 			myTransform.appendTransform_(skewTransform)
 		return myTransform
 
+	@objc.python_method
 	def settings(self):
 		self.menuName = Glyphs.localize({
 			'en': u'Mark Preview',
@@ -58,6 +61,7 @@ class ShowMarkPreview(ReporterPlugin):
 			'es': u'previsualización de acentos',
 		})
 
+	@objc.python_method
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
 		# draw only in letters:
 		glyph = layer.glyph()
@@ -110,6 +114,7 @@ class ShowMarkPreview(ReporterPlugin):
 											nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
 											anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
 
+	@objc.python_method
 	def defineColors(self, RGBA, parameterValue):
 		if parameterValue:
 			# read out custom parameter:
@@ -126,6 +131,7 @@ class ShowMarkPreview(ReporterPlugin):
 					pass
 		return RGBA
 	
+	@objc.python_method
 	def foreground(self, layer):
 		# go through tab content
 		glyph = layer.glyph()
@@ -199,8 +205,15 @@ class ShowMarkPreview(ReporterPlugin):
 					lineOfLayers = []
 					lineOfOffsets = []
 
+	@objc.python_method
 	def needsExtraMainOutlineDrawingForInactiveLayer_(self, layer):
 		return True
 
+	@objc.python_method
 	def shouldDrawAccentCloudForLayer_(self, layer):
 		return False
+
+	@objc.python_method
+	def __file__(self):
+		"""Please leave this method unchanged"""
+		return __file__
