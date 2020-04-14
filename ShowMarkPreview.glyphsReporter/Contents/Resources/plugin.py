@@ -59,6 +59,7 @@ class ShowMarkPreview(ReporterPlugin):
 			'en': u'Mark Preview',
 			'de': u'Akzent-Vorschau',
 			'es': u'previsualización de acentos',
+			'fr': u'aperçu des accents',
 		})
 
 	@objc.python_method
