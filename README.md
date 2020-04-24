@@ -17,6 +17,22 @@ Please install the plugin via the built-in Plugin Manager, available via *Window
 
 The marks will be stacked onto all letters in the Edit tab, provided they have respective anchors.
 
+### Custom mkmk extension
+
+If you are using special anchors to separate `mkmk` from `mark` positioning, you can define an anchor name extension by running the following command in *Window > Macro Panel:*
+
+```python
+Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"] = "_MKMK"
+```
+
+Then the plug-in will prefer anchors with an `_MKMK` suffix for mark-to-mark positioning, e.g. `_top_MKMK` and `top_MKMK`. To reset to defaults again, run this command in Macro Window:
+
+```python
+del Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
+```
+
+The setting is also available in the mekkablue script *App > Set Hidden App Preferences.*
+
 ### Custom Colors
 
 You can set font-specific custom colors with parameters in *File > Font Info > Custom Parameters.* Add these parameters *properties:*
