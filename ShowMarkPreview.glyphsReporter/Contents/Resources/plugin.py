@@ -61,6 +61,8 @@ class ShowMarkPreview(ReporterPlugin):
 			'es': u'previsualización de acentos',
 			'fr': u'aperçu des accents',
 		})
+		Glyphs.registerDefault( "com.mekkablue.ShowMarkPreview.extension", "" )
+		self.extension = Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
 
 	@objc.python_method
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
@@ -84,8 +86,14 @@ class ShowMarkPreview(ReporterPlugin):
 					# continue if there are any marks in the Edit tab:
 					if marks:
 						for thisMark in marks:
-							attachingAnchorNames = [a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")]
-							stackingAnchorNames = [a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")]
+							attachingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")], key = lambda anchorName: len(anchorName) )
+							stackingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")], key = lambda anchorName: len(anchorName) )
+							
+							# sort names with extension to the front:
+							if self.extension:
+								attachingAnchorNames = sorted(attachingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
+								stackingAnchorNames = sorted(stackingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
+							
 							if attachingAnchorNames:
 								for attachingAnchorName in attachingAnchorNames:
 									attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorName,True)
@@ -134,6 +142,8 @@ class ShowMarkPreview(ReporterPlugin):
 	
 	@objc.python_method
 	def foreground(self, layer):
+		self.extension = Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
+		
 		# go through tab content
 		glyph = layer.glyph()
 		font = layer.font()
@@ -176,7 +186,12 @@ class ShowMarkPreview(ReporterPlugin):
 
 			# collect layers in the same line (to only draw the marks we need)
 			for i in range(layerCount):
-				thisLayer = tabView.cachedGlyphAtIndex_(i)
+				try:
+					# GLYPHS 3
+					thisLayer = tabView.cachedLayerAtIndex_(i)
+				except:
+					# GLYPHS 2
+					thisLayer = tabView.cachedGlyphAtIndex_(i)
 
 				# collect layers and their offsets except newlines
 				if type(thisLayer) != GSControlLayer:
