@@ -13,9 +13,9 @@
 	<key>CFBundleName</key>
 	<string>ShowMarkPreview</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.5</string>
+	<string>2.0.6</string>
 	<key>CFBundleVersion</key>
-	<string>22</string>
+	<string>23</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright, Rainer Erich Scheichelbauer, 2017</string>
 	<key>NSPrincipalClass</key>
