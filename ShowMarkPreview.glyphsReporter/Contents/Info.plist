@@ -15,7 +15,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>2.0.6</string>
 	<key>CFBundleVersion</key>
-	<string>23</string>
+	<string>24</string>
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/mekkablue/ShowMarkPreview/master/ShowMarkPreview.glyphsReporter/Contents/Info.plist</string>
 	<key>productPageURL</key>
@@ -23,9 +23,9 @@
 	<key>productReleaseNotes</key>
 	<string>update binary files for Glyphs3</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright, Rainer Erich Scheichelbauer, 2017</string>
+	<string>Copyright, Rainer Erich Scheichelbauer, 2021</string>
 	<key>NSPrincipalClass</key>
-	<string>update binary files for Glyphs3</string>
+	<string>ShowMarkPreview</string>
 	<key>PyMainFileNames</key>
 	<array>
 		<string>plugin.py</string>
