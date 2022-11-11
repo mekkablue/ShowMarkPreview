@@ -58,7 +58,7 @@ class ShowMarkPreview(ReporterPlugin):
 		self.menuName = Glyphs.localize({
 			'en': u'Mark Preview',
 			'de': u'Akzent-Vorschau',
-			'es': u'previsualización de acentos',
+			'es': u'previsualización de diacríticos',
 			'fr': u'aperçu des accents',
 		})
 		Glyphs.registerDefault( "com.mekkablue.ShowMarkPreview.extension", "" )
