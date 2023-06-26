@@ -230,11 +230,6 @@ class ShowMarkPreview(ReporterPlugin):
 					lineOfLayers = []
 					lineOfOffsets = []
 
-	@objc.python_method
-	def needsExtraMainOutlineDrawingForInactiveLayer_(self, layer):
-		return True
-
-	@objc.python_method
 	def shouldDrawAccentCloudForLayer_(self, layer):
 		return False
 
