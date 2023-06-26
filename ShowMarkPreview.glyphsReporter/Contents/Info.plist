@@ -13,9 +13,9 @@
 	<key>CFBundleName</key>
 	<string>ShowMarkPreview</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.7</string>
+	<string>2.0.8</string>
 	<key>CFBundleVersion</key>
-	<string>27</string>
+	<string>28</string>
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/mekkablue/ShowMarkPreview/master/ShowMarkPreview.glyphsReporter/Contents/Info.plist</string>
 	<key>productPageURL</key>
