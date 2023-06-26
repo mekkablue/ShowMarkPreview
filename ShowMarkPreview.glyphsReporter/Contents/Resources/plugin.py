@@ -158,8 +158,15 @@ class ShowMarkPreview(ReporterPlugin):
 		font = layer.font()
 		if not font: # sometimes font is empty, don't know why
 			return
-		darkModeIsTurnedOn = NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == "Dark"	
-		if darkModeIsTurnedOn and Glyphs.defaults["GSEditViewDarkMode"]:
+
+		editView = self.controller.graphicView()
+		try:
+			darkMode = editView.drawDark()
+		except:
+			# Glyphs 2
+			darkMode = NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == "Dark" and Glyphs.defaults["GSEditViewDarkMode"]
+			
+		if darkMode:
 			# default dark mode colors:
 			colorDefaultsActive = [0.8, 0.0, 1.0, 0.5]
 			colorDefaultsInactive = [0.45, 0.15, 0.6, 0.6]
@@ -172,64 +179,51 @@ class ShowMarkPreview(ReporterPlugin):
 		RGBA = self.defineColors(
 			colorDefaultsActive,                       # default active color
 			font.customParameters["MarkPreviewColor"], # user-defined color
-			)
+		)
 		RGBAinactive = self.defineColors(
 			colorDefaultsInactive,                             # default inactive color
 			font.customParameters["MarkPreviewColorInactive"], # user-defined color
-			)
-		
-		activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # * splits into separate items of list
-		inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
+		)
 
-		currentController = self.controller.view().window().windowController()
-		if currentController:
-			if currentController.SpaceKey():
-				activeColor = NSColor.textColor() # colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
-				inactiveColor = NSColor.textColor() # colorWithRed_green_blue_alpha_(0.0, 0.0, 0.0, 1.0)
+		windowController = self.controller.view().window().windowController()
+		if windowController and windowController.SpaceKey():
+			activeColor = NSColor.textColor()
+			inactiveColor = NSColor.textColor()
+		else:
+			activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # * splits into separate items of list
+			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
 
+		layerCount = editView.cachedLayerCount()
+		lineOfLayers = []
+		lineOfOffsets = []
+		activePosition = editView.activePosition()
+		# collect layers in the same line (to only draw the marks we need)
+		for i, thisLayer in enumerate(editView.layoutManager().cachedLayers()):
+			# collect layers and their offsets except newlines
+			if not isinstance(thisLayer, GSControlLayer):
+				lineOfLayers.append(thisLayer)
+				lineOfOffsets.append(editView.cachedPositionAtIndex_(i))
 
-		if font: # sometimes font is empty, don't know why
-			tabView = font.currentTab.graphicView()
-			layerCount = tabView.cachedLayerCount()
+			if not (isinstance(thisLayer, GSControlLayer) or i == layerCount - 1):
+				continue
+
+			# if we reach end of line or end of text, draw with collected layers:
+			# step through all layers of the line:
+			for j, thisLayerInLine in enumerate(lineOfLayers):
+				# draw accents on them if they are Letter/Number/Punctuation
+				if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents or thisLayerInLine.parent.name in self.specialGlyphsOnWhichToDrawAccents:
+					thisLayerInLinePosition = lineOfOffsets[j]
+					offset = subtractPoints(thisLayerInLinePosition, activePosition)
+					if offset == NSPoint(0, 0):
+						activeColor.set()
+						self.drawMarksOnLayer(thisLayerInLine, lineOfLayers)
+					else:
+						inactiveColor.set()
+						self.drawMarksOnLayer(thisLayerInLine, lineOfLayers, offset)
+
+			# reset layer collection
 			lineOfLayers = []
 			lineOfOffsets = []
-
-			# collect layers in the same line (to only draw the marks we need)
-			for i in range(layerCount):
-				try:
-					# GLYPHS 3
-					thisLayer = tabView.cachedLayerAtIndex_(i)
-				except:
-					# GLYPHS 2
-					thisLayer = tabView.cachedGlyphAtIndex_(i)
-
-				# collect layers and their offsets except newlines
-				if type(thisLayer) != GSControlLayer:
-					lineOfLayers.append(thisLayer)
-					lineOfOffsets.append(tabView.cachedPositionAtIndex_(i))
-
-				# if we reach end of line or end of text, draw with collected layers:
-				if type(thisLayer) == GSControlLayer or i == layerCount - 1:
-
-					# step through all layers of the line:
-					for j, thisLayerInLine in enumerate(lineOfLayers):
-
-						# draw accents on them if they are Letter/Number/Punctuation
-						if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents or thisLayerInLine.parent.name in self.specialGlyphsOnWhichToDrawAccents:
-							activePosition = tabView.activePosition()
-							lastLayerInLinePosition = tabView.cachedPositionAtIndex_(i)
-							thisLayerInLinePosition = lineOfOffsets[j]
-							offset = subtractPoints(thisLayerInLinePosition, activePosition)
-							if offset == NSPoint(0,0):
-								activeColor.set()
-								self.drawMarksOnLayer(thisLayerInLine, lineOfLayers)
-							else:
-								inactiveColor.set()
-								self.drawMarksOnLayer(thisLayerInLine, lineOfLayers, offset)
-
-					# reset layer collection
-					lineOfLayers = []
-					lineOfOffsets = []
 
 	def shouldDrawAccentCloudForLayer_(self, layer):
 		return False
