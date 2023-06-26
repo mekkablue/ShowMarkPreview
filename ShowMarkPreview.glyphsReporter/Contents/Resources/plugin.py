@@ -156,7 +156,8 @@ class ShowMarkPreview(ReporterPlugin):
 		# go through tab content
 		glyph = layer.glyph()
 		font = layer.font()
-		
+		if not font: # sometimes font is empty, don't know why
+			return
 		darkModeIsTurnedOn = NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == "Dark"	
 		if darkModeIsTurnedOn and Glyphs.defaults["GSEditViewDarkMode"]:
 			# default dark mode colors:
