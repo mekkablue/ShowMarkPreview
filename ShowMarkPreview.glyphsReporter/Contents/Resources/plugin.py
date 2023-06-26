@@ -61,67 +61,76 @@ class ShowMarkPreview(ReporterPlugin):
 			'es': u'previsualización de diacríticos',
 			'fr': u'aperçu des accents',
 		})
-		Glyphs.registerDefault( "com.mekkablue.ShowMarkPreview.extension", "" )
+		Glyphs.registerDefault("com.mekkablue.ShowMarkPreview.extension", "")
 		self.extension = Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
 
 	@objc.python_method
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
 		# draw only in letters:
+		if not lineOfLayers:
+			return
 		glyph = layer.glyph()
-		if glyph.category in self.categoriesOnWhichToDrawAccents or glyph.name in self.specialGlyphsOnWhichToDrawAccents:
-			anchorDict = {}
-			for thisAnchor in layer.anchorsTraversingComponents():
-				anchorDict[thisAnchor.name] = thisAnchor.position
+		if glyph.category not in self.categoriesOnWhichToDrawAccents and glyph.name not in self.specialGlyphsOnWhichToDrawAccents:
+			return
+		anchorDict = {}
+		anchors = layer.anchorsTraversingComponents()
+		if not anchors:
+			return 
+		for thisAnchor in anchors:
+			anchorDict[thisAnchor.name] = thisAnchor.position
 
-			# continue if there are any anchors in the layer:
-			if anchorDict:
+		# continue if there are any anchors in the layer:
+		if not anchorDict:
+			return
 
-				# continue if there is an Edit tab open:
-				if lineOfLayers:
-					marks = []
-					for thisLayer in lineOfLayers:
-						if thisLayer.glyph() and thisLayer.glyph().category == "Mark":
-							marks.append( thisLayer )
+		marks = []
+		for thisLayer in lineOfLayers:
+			if thisLayer.glyph() and thisLayer.glyph().category == "Mark":
+				marks.append(thisLayer)
 
-					# continue if there are any marks in the Edit tab:
-					if marks:
-						for thisMark in marks:
-							attachingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")], key = lambda anchorName: len(anchorName) )
-							stackingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")], key = lambda anchorName: len(anchorName) )
-							
-							# sort names with extension to the front:
-							if self.extension:
-								attachingAnchorNames = sorted(attachingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
-								stackingAnchorNames = sorted(stackingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
-							
-							if attachingAnchorNames:
-								for attachingAnchorName in attachingAnchorNames:
-									attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorName,True)
-									relatedStackingAnchorName = attachingAnchor.name[1:]
-									try:
-										letterAnchor = anchorDict[relatedStackingAnchorName]
-									except KeyError:
-										letterAnchor = None
-									if letterAnchor:
-										break
+		# continue if there are any marks in the Edit tab:
+		if not marks:
+			return
+		
+		for thisMark in marks:
+			attachingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")], key = lambda anchorName: len(anchorName))
+			stackingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")], key = lambda anchorName: len(anchorName))
+			
+			# sort names with extension to the front:
+			if self.extension:
+				attachingAnchorNames = sorted(attachingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
+				stackingAnchorNames = sorted(stackingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
+			
+			if attachingAnchorNames:
+				for attachingAnchorName in attachingAnchorNames:
+					attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorName,True)
+					relatedStackingAnchorName = attachingAnchor.name[1:]
+					try:
+						letterAnchor = anchorDict[relatedStackingAnchorName]
+					except KeyError:
+						letterAnchor = None
+					if letterAnchor:
+						break
 
-								if letterAnchor:
-									# shift and draw bezier path:
-									scale = self.getScale()
-									shiftX = letterAnchor.x - attachingAnchor.x + offset.x / scale
-									shiftY = letterAnchor.y - attachingAnchor.y + offset.y / scale
-									displayShift = self.transform(shiftX=shiftX, shiftY=shiftY)
-									displayMark = thisMark.completeBezierPath.copy()
-									displayMark.transformUsingAffineTransform_(displayShift)
-									displayMark.fill()
+				if not letterAnchor:
+					continue 
+					
+				# shift and draw bezier path:
+				scale = self.getScale()
+				shiftX = letterAnchor.x - attachingAnchor.x + offset.x / scale
+				shiftY = letterAnchor.y - attachingAnchor.y + offset.y / scale
+				displayShift = self.transform(shiftX=shiftX, shiftY=shiftY)
+				displayMark = thisMark.completeBezierPath.copy()
+				displayMark.transformUsingAffineTransform_(displayShift)
+				displayMark.fill()
 
-									# shift and store next anchor position (if exists)
-									for stackingAnchorName in stackingAnchorNames:
-										stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
-										if stackingAnchor:
-											nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
-											nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
-											anchorDict[stackingAnchorName] = NSPoint( nextAnchorX, nextAnchorY )
+				# shift and store next anchor position (if exists)
+				for stackingAnchorName in stackingAnchorNames:
+					stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
+					if stackingAnchor:
+						nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
+						nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
+						anchorDict[stackingAnchorName] = NSPoint(nextAnchorX, nextAnchorY)
 
 	@objc.python_method
 	def defineColors(self, RGBA, parameterValue):
@@ -195,11 +204,11 @@ class ShowMarkPreview(ReporterPlugin):
 
 				# collect layers and their offsets except newlines
 				if type(thisLayer) != GSControlLayer:
-					lineOfLayers.append( thisLayer )
-					lineOfOffsets.append( tabView.cachedPositionAtIndex_(i) )
+					lineOfLayers.append(thisLayer)
+					lineOfOffsets.append(tabView.cachedPositionAtIndex_(i))
 
 				# if we reach end of line or end of text, draw with collected layers:
-				if type(thisLayer) == GSControlLayer or i==layerCount-1:
+				if type(thisLayer) == GSControlLayer or i == layerCount - 1:
 
 					# step through all layers of the line:
 					for j, thisLayerInLine in enumerate(lineOfLayers):
