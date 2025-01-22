@@ -123,6 +123,13 @@ class ShowMarkPreview(ReporterPlugin):
 				displayMark = thisMark.completeBezierPath.copy()
 				displayMark.transformUsingAffineTransform_(displayShift)
 				displayMark.fill()
+				
+				# also do open paths:
+				openPathMark = thisMark.completeOpenBezierPath.copy()
+				openPathMark.transformUsingAffineTransform_(displayShift)
+				openPathMark.setLineWidth_(2.0 / self.getScale())
+				openPathMark.stroke()
+				
 
 				# shift and store next anchor position (if exists)
 				for stackingAnchorName in stackingAnchorNames:
