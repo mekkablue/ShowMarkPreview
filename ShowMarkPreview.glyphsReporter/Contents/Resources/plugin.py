@@ -18,9 +18,9 @@ from GlyphsApp.plugins import *
 from math import radians, tan
 
 class ShowMarkPreview(ReporterPlugin):
-	categoriesOnWhichToDrawAccents = ("Letter","Number","Punctuation")
-	categoriesForWhichToDrawBaseLetters = ("Mark")
-	specialGlyphsOnWhichToDrawAccents = ("dottedCircle")
+	categoriesOnWhichToDrawAccents = ("Letter", "Number", "Punctuation")
+	categoriesForWhichToDrawBaseLetters = ("Mark",)
+	specialGlyphsOnWhichToDrawAccents = ("dottedCircle",)
 	
 	@objc.python_method
 	def transform(self, shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
@@ -57,13 +57,64 @@ class ShowMarkPreview(ReporterPlugin):
 	@objc.python_method
 	def settings(self):
 		self.menuName = Glyphs.localize({
-			'en': u'Mark Preview',
-			'de': u'Akzent-Vorschau',
-			'es': u'previsualización de diacríticos',
-			'fr': u'aperçu des accents',
+			'en': 'Mark Preview',
+			'de': 'Akzent-Vorschau',
+			'es': 'previsualización de diacríticos',
+			'fr': 'aperçu des accents',
 		})
 		Glyphs.registerDefault("com.mekkablue.ShowMarkPreview.extension", "")
 		self.extension = Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
+
+
+	@objc.python_method
+	def drawBaseInLayer(self, layer, lineOfLayers):
+		if not lineOfLayers:
+			return
+
+		# is it a mark?
+		glyph = layer.glyph()
+		if not glyph.category in self.categoriesForWhichToDrawBaseLetters:
+			return
+
+		# are there any anchors?
+		markAnchorNames = list([a.name for a in layer.anchors if a.name.startswith("_")])
+		if not markAnchorNames:
+			return
+
+		# find the first corresponding base letter in line:
+		baseLetter = None
+		for baseLayer in lineOfLayers:
+			hasCorrespondingAnchors = any([f"_{a.name}" in markAnchorNames for a in baseLayer.anchors])
+			if baseLayer.glyph() and hasCorrespondingAnchors:
+				baseLetter = baseLayer
+				break
+		if baseLetter is None:
+			return
+		
+		# find base anchor that matches mark anchor
+		for baseAnchor in baseLetter.anchors:
+			markAnchorName = f"_{baseAnchor.name}"
+			if not markAnchorName in markAnchorNames:
+				continue
+			basePosition = baseAnchor.position
+			markPosition = layer.anchors[markAnchorName].position
+			baseShift = self.transform(
+				shiftX=markPosition.x-basePosition.x,
+				shiftY=markPosition.y-basePosition.y,
+			)
+			
+			displayBase = baseLetter.completeBezierPath.copy()
+			displayBase.transformUsingAffineTransform_(baseShift)
+			displayBase.fill()
+			
+			# also do open paths:
+			openPathBase = baseLetter.completeOpenBezierPath.copy()
+			openPathBase.transformUsingAffineTransform_(baseShift)
+			openPathBase.setLineWidth_(2.0 / self.getScale())
+			openPathBase.stroke()
+			
+			break
+
 
 	@objc.python_method
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
@@ -77,47 +128,13 @@ class ShowMarkPreview(ReporterPlugin):
 		if not lineOfLayers:
 			return
 		glyph = layer.glyph()
-		
-		# it is a mark: draw nearest base letter
-		if glyph.category in self.categoriesForWhichToDrawBaseLetters:
-			markAnchorNames = list([a.name for a in layer.anchors if a.name.startswith("_")])
-			if markAnchors:
-				baseLetter = None
-				for baseLayer in lineOfLayers:
-					hasCorrespondingAnchors = [f"_{a.name}" in markAnchors for a in baseLayer]
-					if baseLayer.glyph() and hasCorrespondingAnchors:
-						baseLetter = baseLayer
-						break
-				if baseLetter:
-					for baseAnchor in baseLetter.anchors:
-						markAnchorName = f"_{baseAnchor.name}"
-						if not markAnchorName in markAnchors:
-							continue
-						basePosition = baseAnchor.position
-						markPosition = layer.anchors[markAnchorName].position
-						baseShift = self.transform(
-							shiftX=markPosition.x-basePosition.x,
-							shiftY=markPosition.y-basePosition.y,
-						)
-						
-						displayBase = baseLetter.completeBezierPath.copy()
-						displayBase.transformUsingAffineTransform_(baseShift)
-						displayBase.fill()
-						
-						# also do open paths:
-						openPathBase = baseLetter.completeOpenBezierPath.copy()
-						openPathBase.transformUsingAffineTransform_(baseShift)
-						openPathBase.setLineWidth_(2.0 / self.getScale())
-						openPathBase.stroke()
-						
-						break
-							
-		
-		
+
 		# it is a base letter: draw marks of same line
 		if glyph.category not in self.categoriesOnWhichToDrawAccents and glyph.name not in self.specialGlyphsOnWhichToDrawAccents:
 			return
 		anchorDict = {}
+		if not layer.anchorsTraversingComponents():
+			return
 		anchors = [a for a in layer.anchorsTraversingComponents() if not a.name in forbiddenNames]
 		if not anchors:
 			return 
@@ -217,7 +234,7 @@ class ShowMarkPreview(ReporterPlugin):
 		except:
 			# Glyphs 2
 			darkMode = NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == "Dark" and Glyphs.defaults["GSEditViewDarkMode"]
-			
+
 		if darkMode:
 			# default dark mode colors:
 			colorDefaultsActive = [0.8, 0.0, 1.0, 0.5]
@@ -249,6 +266,7 @@ class ShowMarkPreview(ReporterPlugin):
 		lineOfLayers = []
 		lineOfOffsets = []
 		activePosition = editView.activePosition()
+		
 		# collect layers in the same line (to only draw the marks we need)
 		for i, thisLayer in enumerate(editView.layoutManager().cachedLayers()):
 			# collect layers and their offsets except newlines
@@ -256,12 +274,19 @@ class ShowMarkPreview(ReporterPlugin):
 				lineOfLayers.append(thisLayer)
 				lineOfOffsets.append(editView.cachedPositionAtIndex_(i))
 
+			# keep collecting layers until we reach end of line (or text)
 			if not (isinstance(thisLayer, GSControlLayer) or i == layerCount - 1):
 				continue
 
-			# if we reach end of line or end of text, draw with collected layers:
+			# once we reach end of line (or text), draw with collected layers:
 			# step through all layers of the line:
 			for j, thisLayerInLine in enumerate(lineOfLayers):
+				# draw base layer for mark if it is active
+				if glyph.category in self.categoriesForWhichToDrawBaseLetters:
+					if layer == thisLayerInLine:
+						activeColor.set()
+						self.drawBaseInLayer(layer, lineOfLayers)
+
 				# draw accents on them if they are Letter/Number/Punctuation
 				if thisLayerInLine.parent.category in self.categoriesOnWhichToDrawAccents or thisLayerInLine.parent.name in self.specialGlyphsOnWhichToDrawAccents:
 					thisLayerInLinePosition = lineOfOffsets[j]
@@ -273,7 +298,7 @@ class ShowMarkPreview(ReporterPlugin):
 						inactiveColor.set()
 						self.drawMarksOnLayer(thisLayerInLine, lineOfLayers, offset)
 
-			# reset layer collection
+			# reset layer collection for next iteration
 			lineOfLayers = []
 			lineOfOffsets = []
 
