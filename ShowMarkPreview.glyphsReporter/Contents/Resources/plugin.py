@@ -19,6 +19,7 @@ from math import radians, tan
 
 class ShowMarkPreview(ReporterPlugin):
 	categoriesOnWhichToDrawAccents = ("Letter","Number","Punctuation")
+	categoriesForWhichToDrawBaseLetters = ("Mark")
 	specialGlyphsOnWhichToDrawAccents = ("dottedCircle")
 	
 	@objc.python_method
@@ -66,16 +67,61 @@ class ShowMarkPreview(ReporterPlugin):
 
 	@objc.python_method
 	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
+		forbiddenNames = (
+			"origin", "*origin",
+			"#exit", "#entry",
+			"rotate", "#rotate",
+		)
+		
 		# draw only in letters:
 		if not lineOfLayers:
 			return
 		glyph = layer.glyph()
+		
+		# it is a mark: draw nearest base letter
+		if glyph.category in self.categoriesForWhichToDrawBaseLetters:
+			markAnchorNames = list([a.name for a in layer.anchors if a.name.startswith("_")])
+			if markAnchors:
+				baseLetter = None
+				for baseLayer in lineOfLayers:
+					hasCorrespondingAnchors = [f"_{a.name}" in markAnchors for a in baseLayer]
+					if baseLayer.glyph() and hasCorrespondingAnchors:
+						baseLetter = baseLayer
+						break
+				if baseLetter:
+					for baseAnchor in baseLetter.anchors:
+						markAnchorName = f"_{baseAnchor.name}"
+						if not markAnchorName in markAnchors:
+							continue
+						basePosition = baseAnchor.position
+						markPosition = layer.anchors[markAnchorName].position
+						baseShift = self.transform(
+							shiftX=markPosition.x-basePosition.x,
+							shiftY=markPosition.y-basePosition.y,
+						)
+						
+						displayBase = baseLetter.completeBezierPath.copy()
+						displayBase.transformUsingAffineTransform_(baseShift)
+						displayBase.fill()
+						
+						# also do open paths:
+						openPathBase = baseLetter.completeOpenBezierPath.copy()
+						openPathBase.transformUsingAffineTransform_(baseShift)
+						openPathBase.setLineWidth_(2.0 / self.getScale())
+						openPathBase.stroke()
+						
+						break
+							
+		
+		
+		# it is a base letter: draw marks of same line
 		if glyph.category not in self.categoriesOnWhichToDrawAccents and glyph.name not in self.specialGlyphsOnWhichToDrawAccents:
 			return
 		anchorDict = {}
-		anchors = layer.anchorsTraversingComponents()
+		anchors = [a for a in layer.anchorsTraversingComponents() if not a.name in forbiddenNames]
 		if not anchors:
 			return 
+		
 		for thisAnchor in anchors:
 			anchorDict[thisAnchor.name] = thisAnchor.position
 
@@ -129,7 +175,6 @@ class ShowMarkPreview(ReporterPlugin):
 				openPathMark.transformUsingAffineTransform_(displayShift)
 				openPathMark.setLineWidth_(2.0 / self.getScale())
 				openPathMark.stroke()
-				
 
 				# shift and store next anchor position (if exists)
 				for stackingAnchorName in stackingAnchorNames:
