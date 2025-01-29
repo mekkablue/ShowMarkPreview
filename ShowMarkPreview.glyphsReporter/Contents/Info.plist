@@ -13,15 +13,15 @@
 	<key>CFBundleName</key>
 	<string>ShowMarkPreview</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.1</string>
+	<string>2.1.1</string>
 	<key>CFBundleVersion</key>
-	<string>31</string>
+	<string>32</string>
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/mekkablue/ShowMarkPreview/master/ShowMarkPreview.glyphsReporter/Contents/Info.plist</string>
 	<key>productPageURL</key>
 	<string>https://github.com/mekkablue/ShowMarkPreview</string>
 	<key>productReleaseNotes</key>
-	<string>Add base glyph display (thx Katja @ Grilli!)</string>
+	<string>`Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"] = True` for allowing drawing a base letter when editing a mark.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright, Rainer Erich Scheichelbauer, 2021</string>
 	<key>NSPrincipalClass</key>

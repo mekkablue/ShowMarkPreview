@@ -221,6 +221,7 @@ class ShowMarkPreview(ReporterPlugin):
 	@objc.python_method
 	def foreground(self, layer):
 		self.extension = Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
+		drawBase = bool(Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"])
 		
 		# go through tab content
 		glyph = layer.glyph()
@@ -229,10 +230,11 @@ class ShowMarkPreview(ReporterPlugin):
 			return
 
 		editView = self.controller.graphicView()
-		try:
+		if Glyphs.versionNumber >= 3:
+			# GLYPHS 3
 			darkMode = editView.drawDark()
-		except:
-			# Glyphs 2
+		else:
+			# GLYPHS 2
 			darkMode = NSUserDefaults.standardUserDefaults().stringForKey_('AppleInterfaceStyle') == "Dark" and Glyphs.defaults["GSEditViewDarkMode"]
 
 		if darkMode:
@@ -258,9 +260,11 @@ class ShowMarkPreview(ReporterPlugin):
 		if windowController and windowController.SpaceKey():
 			activeColor = NSColor.textColor()
 			inactiveColor = NSColor.textColor()
+			drawBase = False
 		else:
 			activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # * splits into separate items of list
 			inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
+			drawBase = drawbase and True
 
 		layerCount = editView.cachedLayerCount()
 		lineOfLayers = []
@@ -282,7 +286,7 @@ class ShowMarkPreview(ReporterPlugin):
 			# step through all layers of the line:
 			for j, thisLayerInLine in enumerate(lineOfLayers):
 				# draw base layer for mark if it is active
-				if glyph.category in self.categoriesForWhichToDrawBaseLetters:
+				if drawBase and glyph.category in self.categoriesForWhichToDrawBaseLetters:
 					if layer == thisLayerInLine:
 						activeColor.set()
 						self.drawBaseInLayer(layer, lineOfLayers)
