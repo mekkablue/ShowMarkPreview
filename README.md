@@ -19,11 +19,15 @@ The marks will be stacked onto all letters in the Edit tab, provided they have r
 
 You can also do the opposite: have _base letters_ shown while editing _marks._ To activate this, paste the following line in _Window > Macro Window,_ and press _Run:_
 
-    Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"] = True
+```python
+Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"] = True
+```
 
 To reset to the old behavior, either replace `True` with `False`, or delete the setting like this:
 
-    del Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"]
+```python
+del Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"]
+```
 
 ### Custom mkmk extension
 
