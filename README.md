@@ -17,6 +17,14 @@ Please install the plugin via the built-in Plugin Manager, available via *Window
 
 The marks will be stacked onto all letters in the Edit tab, provided they have respective anchors.
 
+You can also do the opposite: have _base letters_ shown while editing _marks._ To activate this, paste the following line in _Window > Macro Window,_ and press _Run:_
+
+    Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"] = True
+
+To reset to the old behavior, either replace `True` with `False`, or delete the setting like this:
+
+    del Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"]
+
 ### Custom mkmk extension
 
 If you are using special anchors to separate `mkmk` from `mark` positioning, you can define an anchor name extension by running the following command in *Window > Macro Panel:*
@@ -49,7 +57,7 @@ As values, take comma-separated values between 0.0 and 1.0 for R, G, B, and A. I
 
 ### License
 
-Copyright 2017 Rainer Erich Scheichelbauer (@mekkablue). Based on sample code by Georg Seifert (@schriftgestalt) and Jan Gerner (@yanone).
+Copyright 2017 Rainer Erich Scheichelbauer (@mekkablue). Based on sample code by the Glyphs team.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
