@@ -13,15 +13,17 @@ from __future__ import division, print_function, unicode_literals
 ###########################################################################################################
 
 import objc
-from GlyphsApp import *
-from GlyphsApp.plugins import *
+from GlyphsApp import Glyphs, GSControlLayer, subtractPoints
+from GlyphsApp.plugins import ReporterPlugin
 from math import radians, tan
+from Foundation import NSAffineTransform, NSAffineTransformStruct, NSPoint
+from AppKit import NSUserDefaults, NSColor
 
 class ShowMarkPreview(ReporterPlugin):
 	categoriesOnWhichToDrawAccents = ("Letter", "Number", "Punctuation")
 	categoriesForWhichToDrawBaseLetters = ("Mark",)
 	specialGlyphsOnWhichToDrawAccents = ("dottedCircle",)
-	
+
 	@objc.python_method
 	def transform(self, shiftX=0.0, shiftY=0.0, rotate=0.0, skew=0.0, scale=1.0):
 		"""
@@ -43,7 +45,7 @@ class ShowMarkPreview(ReporterPlugin):
 		if scale != 1.0:
 			myTransform.scaleBy_(scale)
 		if not (shiftX == 0.0 and shiftY == 0.0):
-			myTransform.translateXBy_yBy_(shiftX,shiftY)
+			myTransform.translateXBy_yBy_(shiftX, shiftY)
 		if skew:
 			skewStruct = NSAffineTransformStruct()
 			skewStruct.m11 = 1.0
@@ -74,7 +76,7 @@ class ShowMarkPreview(ReporterPlugin):
 
 		# is it a mark?
 		glyph = layer.glyph()
-		if not glyph.category in self.categoriesForWhichToDrawBaseLetters:
+		if glyph.category not in self.categoriesForWhichToDrawBaseLetters:
 			return
 
 		# are there any anchors?
@@ -91,40 +93,40 @@ class ShowMarkPreview(ReporterPlugin):
 				break
 		if baseLetter is None:
 			return
-		
+
 		# find base anchor that matches mark anchor
 		for baseAnchor in baseLetter.anchors:
 			markAnchorName = f"_{baseAnchor.name}"
-			if not markAnchorName in markAnchorNames:
+			if markAnchorName not in markAnchorNames:
 				continue
 			basePosition = baseAnchor.position
 			markPosition = layer.anchors[markAnchorName].position
 			baseShift = self.transform(
-				shiftX=markPosition.x-basePosition.x,
-				shiftY=markPosition.y-basePosition.y,
+				shiftX=markPosition.x - basePosition.x,
+				shiftY=markPosition.y - basePosition.y,
 			)
-			
+
 			displayBase = baseLetter.completeBezierPath.copy()
 			displayBase.transformUsingAffineTransform_(baseShift)
 			displayBase.fill()
-			
+
 			# also do open paths:
 			openPathBase = baseLetter.completeOpenBezierPath.copy()
 			openPathBase.transformUsingAffineTransform_(baseShift)
 			openPathBase.setLineWidth_(2.0 / self.getScale())
 			openPathBase.stroke()
-			
+
 			break
 
 
 	@objc.python_method
-	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0,0)):
+	def drawMarksOnLayer(self, layer, lineOfLayers, offset=NSPoint(0, 0)):
 		forbiddenNames = (
 			"origin", "*origin",
 			"#exit", "#entry",
 			"rotate", "#rotate",
 		)
-		
+
 		# draw only in letters:
 		if not lineOfLayers:
 			return
@@ -136,10 +138,10 @@ class ShowMarkPreview(ReporterPlugin):
 		anchorDict = {}
 		if not layer.anchorsTraversingComponents():
 			return
-		anchors = [a for a in layer.anchorsTraversingComponents() if not a.name in forbiddenNames]
+		anchors = [a for a in layer.anchorsTraversingComponents() if a.name not in forbiddenNames]
 		if not anchors:
-			return 
-		
+			return
+
 		for thisAnchor in anchors:
 			anchorDict[thisAnchor.name] = thisAnchor.position
 
@@ -155,19 +157,19 @@ class ShowMarkPreview(ReporterPlugin):
 		# continue if there are any marks in the Edit tab:
 		if not marks:
 			return
-		
+
 		for thisMark in marks:
-			attachingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")], key = lambda anchorName: len(anchorName))
-			stackingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")], key = lambda anchorName: len(anchorName))
-			
+			attachingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if a.startswith("_")], key=lambda anchorName: len(anchorName))
+			stackingAnchorNames = sorted([a for a in thisMark.anchorNamesTraversingComponents() if not a.startswith("_")], key=lambda anchorName: len(anchorName))
+
 			# sort names with extension to the front:
 			if self.extension:
-				attachingAnchorNames = sorted(attachingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
-				stackingAnchorNames = sorted(stackingAnchorNames, key = lambda anchorName: -(self.extension in anchorName))
-			
+				attachingAnchorNames = sorted(attachingAnchorNames, key=lambda anchorName: -(self.extension in anchorName))
+				stackingAnchorNames = sorted(stackingAnchorNames, key=lambda anchorName: -(self.extension in anchorName))
+
 			if attachingAnchorNames:
 				for attachingAnchorName in attachingAnchorNames:
-					attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorName,True)
+					attachingAnchor = thisMark.anchorForName_traverseComponents_(attachingAnchorName, True)
 					relatedStackingAnchorName = attachingAnchor.name[1:]
 					try:
 						letterAnchor = anchorDict[relatedStackingAnchorName]
@@ -177,8 +179,8 @@ class ShowMarkPreview(ReporterPlugin):
 						break
 
 				if not letterAnchor:
-					continue 
-					
+					continue
+
 				# shift and draw bezier path:
 				scale = self.getScale()
 				shiftX = letterAnchor.x - attachingAnchor.x + offset.x / scale
@@ -187,7 +189,7 @@ class ShowMarkPreview(ReporterPlugin):
 				displayMark = thisMark.completeBezierPath.copy()
 				displayMark.transformUsingAffineTransform_(displayShift)
 				displayMark.fill()
-				
+
 				# also do open paths:
 				openPathMark = thisMark.completeOpenBezierPath.copy()
 				openPathMark.transformUsingAffineTransform_(displayShift)
@@ -196,7 +198,7 @@ class ShowMarkPreview(ReporterPlugin):
 
 				# shift and store next anchor position (if exists)
 				for stackingAnchorName in stackingAnchorNames:
-					stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName,True)
+					stackingAnchor = thisMark.anchorForName_traverseComponents_(stackingAnchorName, True)
 					if stackingAnchor:
 						nextAnchorX = stackingAnchor.x + shiftX - offset.x / scale
 						nextAnchorY = stackingAnchor.y + shiftY - offset.y / scale
@@ -207,28 +209,28 @@ class ShowMarkPreview(ReporterPlugin):
 		if parameterValue:
 			# read out custom parameter:
 			parameterValues = [item.strip() for item in parameterValue.strip().split(",")]
-		
+
 			# add the values to the RGBA list of colors:
-			numValues = min(4,len(parameterValues))
+			numValues = min(4, len(parameterValues))
 			for i in range(numValues):
 				try:
 					value = float(parameterValues[i])
-					RGBA[i] = min(value,1.0)
+					RGBA[i] = min(value, 1.0)
 				except:
 					# fail gracefully and continue if invalid
 					pass
 		return RGBA
-	
+
 	@objc.python_method
 	def foreground(self, layer):
 		try:
 			self.extension = Glyphs.defaults["com.mekkablue.ShowMarkPreview.extension"]
 			drawBase = bool(Glyphs.defaults["com.mekkablue.ShowMarkPreview.previewBaseInMarks"])
-		
+
 			# go through tab content
 			glyph = layer.glyph()
 			font = layer.font()
-			if not font: # sometimes font is empty, don't know why
+			if not font:  # sometimes font is empty, don't know why
 				return
 
 			editView = self.controller.graphicView()
@@ -250,21 +252,21 @@ class ShowMarkPreview(ReporterPlugin):
 
 			# define drawing colors (user set or defaults)
 			RGBA = self.defineColors(
-				colorDefaultsActive,                       # default active color
-				font.customParameters["MarkPreviewColor"], # user-defined color
+				colorDefaultsActive,                        # default active color
+				font.customParameters["MarkPreviewColor"],  # user-defined color
 			)
 			RGBAinactive = self.defineColors(
-				colorDefaultsInactive,                             # default inactive color
-				font.customParameters["MarkPreviewColorInactive"], # user-defined color
+				colorDefaultsInactive,                              # default inactive color
+				font.customParameters["MarkPreviewColorInactive"],  # user-defined color
 			)
 
-			windowController = self.controller.view().window().windowController()
+			windowController = self.controller.windowController()
 			if windowController and windowController.SpaceKey():
 				activeColor = NSColor.textColor()
 				inactiveColor = NSColor.textColor()
 				drawBase = False
 			else:
-				activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA) # * splits into separate items of list
+				activeColor = NSColor.colorWithRed_green_blue_alpha_(*RGBA)  # * splits into separate items of list
 				inactiveColor = NSColor.colorWithRed_green_blue_alpha_(*RGBAinactive)
 				drawBase = drawBase and True
 
@@ -272,7 +274,7 @@ class ShowMarkPreview(ReporterPlugin):
 			lineOfLayers = []
 			lineOfOffsets = []
 			activePosition = editView.activePosition()
-		
+
 			# collect layers in the same line (to only draw the marks we need)
 			for i, thisLayer in enumerate(editView.layoutManager().cachedLayers()):
 				# collect layers and their offsets except newlines
